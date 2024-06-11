@@ -1,0 +1,26 @@
+{
+    "name": "skedai_user_server",
+    "version": "0.0.1",
+    "main": "main.js",
+    "dependencies": {
+      "@supabase/supabase-js": "^1.0.0",
+      "axios": "^1.6.2",
+      "child_process": "^1.0.2",
+      "chokidar": "^3.5.3",
+      "electron-builder": "^24.6.4",
+      "fs": "^0.0.1-security",
+      "node": "^20.6.0",
+      "node-cron": "^3.0.3",
+      "node-notifier": "^10.0.1",
+      "node-windows": "^1.0.0-beta.8",
+      "os": "^0.1.2",
+      "path": "^0.12.7",
+      "supabase": "^1.93.0",
+      "uuid": "^9.0.0"
+    },
+    "pkg": {
+      "assets": [
+        "node_modules/axios/**/*"
+      ]
+    }
+  }
