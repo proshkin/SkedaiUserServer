@@ -1,0 +1,34 @@
+name: UserServer Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup Node.js environment for packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.0'
+
+      - name: Install dependencies for userServerMain.js
+        run: |
+          npm install -g nexe
+          npm install
+
+      - name: setup Node.js environment for nexe
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14.15.3'
+
+      - name: Build userServerMain.js to main.exe
+        run: nexe userServerMain.js -o main.exe
+
+      - name: Upload compiled main.exe as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: userServer_win0.0.1
+          path: userServerMain/main.exe
