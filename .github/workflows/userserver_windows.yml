@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: userServer_win0.0.1
-          path: userServerMain/main.exe
+          path: main.exe
