@@ -1,4 +1,4 @@
-name: UserServer Build
+name: Windows UserServer Build
 
 on: [push]
 
