@@ -18,7 +18,7 @@ jobs:
         run: npm install -g pkg
 
       - name: Build executable
-        run: pkg userServer.js --targets latest-macos-x64 --output userServer_mac
+        run: pkg main.js --targets latest-macos-x64 --output userServer_mac
 
       - name: Upload userServer_mac as artifact
         uses: actions/upload-artifact@v4
