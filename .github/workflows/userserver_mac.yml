@@ -1,0 +1,27 @@
+name: Mac UserServer Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment for packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.0'
+      
+      - name: Install pkg
+        run: npm install -g pkg
+
+      - name: Build executable
+        run: pkg userServer.js --targets latest-macos-x64 --output userServer_mac
+
+      - name: Upload userServer_mac as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: userServer_mac0.0.1
+          path: userServer_mac
