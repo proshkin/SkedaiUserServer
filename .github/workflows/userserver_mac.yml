@@ -60,16 +60,26 @@ jobs:
           name: userServer_mac_${{ env.version }}
           path: userServer_mac
       
+      - name: Calculate Release Version
+        id: calculate_version
+        if: env.is_release == 'true'
+        run: |
+          release_version="0.$((${{ env.releases }} + 1)).${{ env.commits }}"
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+        shell: bash
+
       - name: Create Release
         id: create_release
         if: env.is_release == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
+          RELEASE_VERSION: ${{ steps.calculate_version.outputs.RELEASE_VERSION }}
         with:
-          tag_name: "0.$(expr ${{ env.releases }} + 1).${{ env.commits }}"
+          tag_name: ${{ env.RELEASE_VERSION }}
           release_name: "Test Automated Release"
           body: |
             This is an automated test release
           draft: false
           prerelease: ${{ env.is_prerelease == 'true' }}
+
