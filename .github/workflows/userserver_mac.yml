@@ -75,7 +75,6 @@ jobs:
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
-          RELEASE_VERSION: ${{ steps.calculate_version.outputs.RELEASE_VERSION }}
         with:
           tag_name: "${{ env.RELEASE_VERSION }}"
           release_name: "Test Automated Release"
