@@ -1,34 +1,76 @@
-name: Windows UserServer Build
+name: Mac UserServer Build
 
 on: [push]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Read Config File
+        id: read_config
+        run: |
+          while IFS=: read -r key value; do
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            echo "$key=$value" >> $GITHUB_ENV
+          done < config.txt
+        shell: bash
 
-      - name: setup Node.js environment for packages
+      - name: Setup Node.js environment for packages
         uses: actions/setup-node@v4
         with:
           node-version: '20.11.0'
+      
+      - name: Install pkg
+        run: npm install -g pkg
 
-      - name: Install dependencies for userServerMain.js
+      - name: Get number of releases
+        id: get_releases
         run: |
-          npm install -g nexe
-          npm install
+          releases=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases?per_page=1" | jq -r '.[].id' | wc -l)
+          releases=$(echo $releases | xargs)
+          echo "releases=$releases" >> $GITHUB_ENV
 
-      - name: setup Node.js environment for nexe
-        uses: actions/setup-node@v4
-        with:
-          node-version: '14.15.3'
+      - name: Get number of commits
+        id: get_commits
+        run: |
+          commits=$(git rev-list --count HEAD)
+          commits=$(echo $commits | xargs)
+          echo "commits=$commits" >> $GITHUB_ENV
 
-      - name: Build userServerMain.js to main.exe
-        run: nexe userServerMain.js -o main.exe
+      - name: Set version number
+        id: set_version
+        run: |
+          version="0.${{ env.releases }}.${{ env.commits }}"
+          version=$(echo $version | xargs)
+          echo "version=$version"
+          echo "version=$version" >> $GITHUB_ENV
 
-      - name: Upload compiled main.exe as artifact
+      - name: Build executable
+        run: pkg main.js --targets latest-macos-x64 --output userServer_mac
+
+      - name: Upload userServer_mac as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: userServer_win0.0.1
-          path: main.exe
+          name: userServer_mac_${{ env.version }}
+          path: userServer_mac
+      
+      - name: Create Release
+        id: create_release
+        if: env.is_release == 'true'
+        release_version="0.${{ env.releases + 1 }}.${{ env.commits }}"
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
+        with:
+          tag_name: "${{ env.release_version }}"
+          release_name: "Test Automated Release"
+          body: |
+            This is an automated test release
+          draft: false
+          prerelease: ${{ env.is_prerelease == 'true' }}
