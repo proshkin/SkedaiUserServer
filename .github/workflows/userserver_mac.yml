@@ -10,6 +10,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Read Config File
+        id: read_config
+        run: |
+          while IFS=: read -r key value; do
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            echo "$key=$value" >> $GITHUB_ENV
+          done < config.txt
+        shell: bash
 
       - name: Setup Node.js environment for packages
         uses: actions/setup-node@v4
@@ -49,3 +59,18 @@ jobs:
         with:
           name: userServer_mac_${{ env.version }}
           path: userServer_mac
+      
+      - name: Create Release
+        id: create_release
+        if: env.is_release == 'true'
+        release_version="0.${{ env.releases + 1 }}.${{ env.commits }}"
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
+        with:
+          tag_name: "${{ env.release_version }}"
+          release_name: "Test Automated Release"
+          body: |
+            This is an automated test release
+          draft: false
+          prerelease: ${{ env.is_prerelease == 'true' }}
