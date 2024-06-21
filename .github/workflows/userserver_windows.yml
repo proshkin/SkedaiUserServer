@@ -1,76 +1,78 @@
-name: Mac UserServer Build
+name: Windows UserServer Build
 
 on: [push]
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Read Config File
-        id: read_config
-        run: |
-          while IFS=: read -r key value; do
-            key=$(echo "$key" | xargs)
-            value=$(echo "$value" | xargs)
-            echo "$key=$value" >> $GITHUB_ENV
-          done < config.txt
-        shell: bash
 
-      - name: Setup Node.js environment for packages
+      - name: setup Node.js environment for packages
         uses: actions/setup-node@v4
         with:
           node-version: '20.11.0'
-      
-      - name: Install pkg
-        run: npm install -g pkg
 
-      - name: Get number of releases
-        id: get_releases
+      - name: Install dependencies for userServerMain.js
         run: |
-          releases=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases?per_page=1" | jq -r '.[].id' | wc -l)
-          releases=$(echo $releases | xargs)
-          echo "releases=$releases" >> $GITHUB_ENV
+          npm install -g nexe
+          npm install
 
-      - name: Get number of commits
-        id: get_commits
-        run: |
-          commits=$(git rev-list --count HEAD)
-          commits=$(echo $commits | xargs)
-          echo "commits=$commits" >> $GITHUB_ENV
+      - name: setup Node.js environment for nexe
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14.15.3'
 
-      - name: Set version number
-        id: set_version
+      - name: Download version artifact from previous workflow
+        uses: actions/download-artifact@v2
+        with:
+          name: version
+
+      - name: Read version
+        id: read_version
         run: |
-          version="0.${{ env.releases }}.${{ env.commits }}"
-          version=$(echo $version | xargs)
-          echo "version=$version"
+          version=$(cat version.txt)
           echo "version=$version" >> $GITHUB_ENV
 
-      - name: Build executable
-        run: pkg main.js --targets latest-macos-x64 --output userServer_mac
+      - name: Build userServerMain.js to main.exe
+        run: nexe userServerMain.js -o main.exe
 
-      - name: Upload userServer_mac as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: userServer_mac_${{ env.version }}
-          path: userServer_mac
-      
-      - name: Create Release
-        id: create_release
+      - name: Check if release exists
+        id: check_release
+        run: |
+          release_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.version }}" | jq -r '.url')
+          if [ "$release_url" == "null" ]; then
+            echo "release_exists=false" >> $GITHUB_ENV
+          else
+            echo "release_exists=true" >> $GITHUB_ENV
+            echo "release_url=$release_url" >> $GITHUB_ENV
+          fi
+
+      - name: Create or Get Release
+        id: create_or_get_release
         if: env.is_release == 'true'
-        release_version="0.${{ env.releases + 1 }}.${{ env.commits }}"
-        uses: actions/create-release@v1
+        run: |
+          if [ "${{ env.release_exists }}" == "true" ]; then
+            echo "Using existing release."
+            echo "upload_url=$(curl -s -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' ${{ env.release_url }} | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
+          else
+            echo "Creating new release."
+            response=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\": \"${{ env.version }}\", \"name\": \"Release ${{ env.version }}\", \"body\": \"Automated release\", \"draft\": false, \"prerelease\": ${{ env.is_prerelease == 'true' }}}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases")
+            echo "upload_url=$(echo $response | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
+          fi
+
+      - name: Upload Release Asset
+        if: env.is_release == 'true'
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
         with:
-          tag_name: "${{ env.release_version }}"
-          release_name: "Test Automated Release"
-          body: |
-            This is an automated test release
-          draft: false
-          prerelease: ${{ env.is_prerelease == 'true' }}
+          upload_url: ${{ env.upload_url }}
+          asset_path: main.exe
+          asset_name: userServer_win_${{ env.version }}
+          asset_content_type: application/octet-stream
