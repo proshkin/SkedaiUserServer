@@ -69,17 +69,6 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
         shell: bash
 
-      - name: Check for Existing Release
-        id: check_release
-        if: env.is_release == 'true'
-        run: |
-          existing_release=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.RELEASE_VERSION }}" | jq -r '.id')
-          if [ "$existing_release" != "null" ]; then
-            echo "Release with tag ${{ env.RELEASE_VERSION }} already exists."
-            exit 1
-          fi
-        shell: bash
-
       - name: Create Release
         id: create_release
         if: env.is_release == 'true'
@@ -104,3 +93,4 @@ jobs:
           asset_path: userServer_mac
           asset_name: userServerMac
           asset_content_type: application/octet-stream
+
