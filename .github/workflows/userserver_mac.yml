@@ -1,10 +1,11 @@
 name: Mac UserServer Build
 
-on: [push]
+on:
+  repository_dispatch:
+    types: [trigger-userserver-build]
 
 jobs:
   build:
-    if: "!contains(github.ref, 'refs/tags/')"
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -37,19 +38,15 @@ jobs:
           releases=$(echo $releases | xargs)
           echo "releases=$releases" >> $GITHUB_ENV
 
-      - name: Get number of commits
-        id: get_commits
-        run: |
-          commits=$(git rev-list --count HEAD)
-          commits=$(echo $commits | xargs)
-          echo "commits=$commits" >> $GITHUB_ENV
+      - name: Download version artifact from previous workflow
+        uses: actions/download-artifact@v2
+        with:
+          name: version
 
-      - name: Set version number
-        id: set_version
+      - name: Read version
+        id: read_version
         run: |
-          version="0.${{ env.releases }}.${{ env.commits }}"
-          version=$(echo $version | xargs)
-          echo "version=$version"
+          version=$(cat version.txt)
           echo "version=$version" >> $GITHUB_ENV
 
       - name: Build executable
@@ -60,36 +57,44 @@ jobs:
         with:
           name: userServer_mac_${{ env.version }}
           path: userServer_mac
-      
-      - name: Calculate Release Version
-        id: calculate_version
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          release_url=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.version }}" | jq -r '.url')
+          if [ "$release_url" == "null" ]; then
+            echo "release_exists=false" >> $GITHUB_ENV
+          else
+            echo "release_exists=true" >> $GITHUB_ENV
+            echo "release_url=$release_url" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Create or Get Release
+        id: create_or_get_release
         if: env.is_release == 'true'
         run: |
-          release_version="0.$((${{ env.releases }} + 1)).${{ env.commits }}"
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+          if [ "${{ env.release_exists }}" == "true" ]; then
+            echo "Using existing release."
+            echo "upload_url=$(curl -s -H 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' ${{ env.release_url }} | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
+          else
+            echo "Creating new release."
+            response=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\": \"${{ env.version }}\", \"name\": \"Release ${{ env.version }}\", \"body\": \"Automated release\", \"draft\": false, \"prerelease\": ${{ env.is_prerelease == 'true' }}}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases")
+            echo "upload_url=$(echo $response | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
+          fi
         shell: bash
-  
-      - name: Create Release
-        id: create_release
-        if: env.is_release == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
-        with:
-          tag_name: "${{ env.RELEASE_VERSION }}"
-          release_name: "Release ${{ env.RELEASE_VERSION }}"
-          body: |
-            Automated release
-          draft: false
-          prerelease: ${{ env.is_prerelease == 'true' }}
-      
+
       - name: Upload Release Asset
         if: env.is_release == 'true'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ env.upload_url }}
           asset_path: userServer_mac
-          asset_name: userServer_mac_${{ env.RELEASE_VERSION }}
+          asset_name: userServer_mac_${{ env.version }}
           asset_content_type: application/octet-stream
