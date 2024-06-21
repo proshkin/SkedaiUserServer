@@ -1,6 +1,8 @@
 name: Windows UserServer Build
 
-on: [push]
+on:
+  repository_dispatch:
+    types: [trigger-userserver-build]
 
 jobs:
   build:
