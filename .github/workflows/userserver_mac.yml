@@ -104,4 +104,3 @@ jobs:
           asset_path: userServer_mac
           asset_name: userServerMac
           asset_content_type: application/octet-stream
-
