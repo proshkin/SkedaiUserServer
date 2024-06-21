@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   build:
+    if: "!contains(github.ref, 'refs/tags/')"
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -65,9 +66,13 @@ jobs:
         if: env.is_release == 'true'
         run: |
           release_version="0.$((${{ env.releases }} + 1)).${{ env.commits }}"
-          echo "RELEASE_VERSION=$release_version"
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
         shell: bash
+
+      - name: Check Calculated Release Version
+        if: env.is_release == 'true'
+        run: |
+          echo "Calculated Release Version: ${{ env.RELEASE_VERSION }}"
 
       - name: Create Release
         id: create_release
@@ -77,9 +82,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SKEDAI_ACTION_TOKEN }}
         with:
           tag_name: "${{ env.RELEASE_VERSION }}"
-          release_name: "Test Automated Release"
+          release_name: "Release ${{ env.RELEASE_VERSION }}"
           body: |
-            This is an automated test release
+            Automated release
           draft: false
           prerelease: ${{ env.is_prerelease == 'true' }}
       
@@ -91,6 +96,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: userServer_mac
-          asset_name: userServerMac
+          asset_name: userServer_mac_${{ env.RELEASE_VERSION }}
           asset_content_type: application/octet-stream
-
