@@ -68,12 +68,7 @@ jobs:
           release_version="0.$((${{ env.releases }} + 1)).${{ env.commits }}"
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
         shell: bash
-
-      - name: Check Calculated Release Version
-        if: env.is_release == 'true'
-        run: |
-          echo "Calculated Release Version: ${{ env.RELEASE_VERSION }}"
-
+  
       - name: Create Release
         id: create_release
         if: env.is_release == 'true'
