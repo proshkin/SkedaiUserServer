@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
@@ -34,12 +34,14 @@ jobs:
           echo "version=$version"
           echo "version=$version" >> $GITHUB_ENV
 
+      - name: Create version.txt file
+        run: echo "${{ env.version }}" > version.txt
+
       - name: Upload version artifact
         uses: actions/upload-artifact@v2
         with:
           name: version
           path: version.txt
-        run: echo "${{ env.version }}" > version.txt
 
       - name: Trigger Workflow B
         run: |
