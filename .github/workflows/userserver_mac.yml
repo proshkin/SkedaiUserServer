@@ -1,17 +1,31 @@
 name: Mac UserServer Build
 
 on:
-  repository_dispatch:
-    types: [trigger-userserver-build]
+  workflow_run:
+    workflows: ["Calculate Version and Trigger Build"]
+    types:
+      - completed
 
 jobs:
   build:
     runs-on: macos-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: version
+          run_id: ${{ github.event.workflow_run.id }}
+      
+      - name: Read version
+        run: |
+          version=$(cat version.txt)
+          echo "version=$version" >> $GITHUB_ENV
       
       - name: Read Config File
         id: read_config
@@ -37,17 +51,6 @@ jobs:
           releases=$(curl -s -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" | jq -r '. | length')
           releases=$(echo $releases | xargs)
           echo "releases=$releases" >> $GITHUB_ENV
-
-      - name: Download version artifact from previous workflow
-        uses: actions/download-artifact@v2
-        with:
-          name: version
-
-      - name: Read version
-        id: read_version
-        run: |
-          version=$(cat version.txt)
-          echo "version=$version" >> $GITHUB_ENV
 
       - name: Build executable
         run: pkg main.js --targets latest-macos-x64 --output userServer_mac
