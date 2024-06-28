@@ -10,7 +10,7 @@ const path = require("path");
 const axios = require("axios");
 const cron = require('node-cron');
 const https = require('https');
-const {randomUUID} = require("node:crypto");
+const {randomUUID} = require("crypto");
 
 const supabase = createClient('https://jfcurpgmlzlceotuthat.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmY3VycGdtbHpsY2VvdHV0aGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDUwODQ4ODksImV4cCI6MjAyMDY2MDg4OX0.7rAa3V9obXlEhewdRah4unY0apsEPHWEYXk5OwKYkLI');
 
