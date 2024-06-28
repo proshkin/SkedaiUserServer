@@ -73,14 +73,17 @@ jobs:
       - name: Test-run the executable
         run: |
           try {
-            Start-Process -FilePath .\main.exe -NoNewWindow -PassThru
+            $process = Start-Process -FilePath .\main.exe -NoNewWindow -PassThru
+            Write-Output "Process started: $($process.Id)"
             Start-Sleep -Seconds 5
-            Stop-Process -Name main -Force
+            Stop-Process -Id $process.Id -Force
+            Write-Output "Process stopped: $($process.Id)"
           } catch {
             Write-Error "Executable failed to run"
             exit 1
           }
         shell: pwsh
+
 
       - name: Upload userServer_win as artifact
         uses: actions/upload-artifact@v4
