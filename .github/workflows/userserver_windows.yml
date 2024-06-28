@@ -79,32 +79,30 @@ jobs:
       - name: Check if release exists
         id: check_release
         run: |
-          release_url=$(curl -s -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.version }}" | jq -r '.url')
-          if [ "$release_url" == "null" ]; then
-            echo "release_exists=false" >> $GITHUB_ENV
-          else
-            echo "release_exists=true" >> $GITHUB_ENV
-            echo "release_url=$release_url" >> $GITHUB_ENV
-        shell: bash
+          $release_url = $(curl -s -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.version }}" | jq -r '.url')
+          if ($release_url -eq "null") {
+            echo "release_exists=false" >> $env:GITHUB_ENV
+          } else {
+            echo "release_exists=true" >> $env:GITHUB_ENV
+            echo "release_url=$release_url" >> $env:GITHUB_ENV
+          }
+        shell: pwsh
 
       - name: Create or Get Release
         id: create_or_get_release
         if: env.is_release == 'true'
         run: |
-          if [ "${{ env.release_exists }}" == "true" ]; then
+          if ($env:release_exists -eq "true") {
             echo "Using existing release."
-            upload_url=$(curl -s -H 'Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}' ${{ env.release_url }} | jq -r '.upload_url')
-            echo "upload_url=$upload_url" >> $GITHUB_ENV
-          else
+            $upload_url = $(curl -s -H 'Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}' $env:release_url | jq -r '.upload_url')
+            echo "upload_url=$upload_url" >> $env:GITHUB_ENV
+          } else {
             echo "Creating new release."
-            response=$(curl -s -X POST -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d "{\"tag_name\": \"${{ env.version }}\", \"name\": \"Release ${{ env.version }}\", \"body\": \"Automated release\", \"draft\": false, \"prerelease\": ${{ env.is_prerelease == 'true' }}}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases")
-            upload_url=$(echo $response | jq -r '.upload_url')
-            echo "upload_url=$upload_url" >> $GITHUB_ENV
-        shell: bash
+            $response = $(curl -s -X POST -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" -H "Content-Type: application/json" -d "{\"tag_name\": \"${{ env.version }}\", \"name\": \"Release ${{ env.version }}\", \"body\": \"Automated release\", \"draft\": false, \"prerelease\": ${{ env.is_prerelease == 'true' }}}" "https://api.github.com/repos/${{ github.repository }}/releases")
+            $upload_url = $(echo $response | jq -r '.upload_url')
+            echo "upload_url=$upload_url" >> $env:GITHUB_ENV
+          }
+        shell: pwsh
 
       - name: Debugging Information
         run: |
