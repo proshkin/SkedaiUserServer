@@ -29,10 +29,12 @@ jobs:
       - name: Set version number
         id: set_version
         run: |
-          version="0.${{ env.releases }}.${{ env.commits }}"
+          releases_number=$(( ${{ env.releases }} + 1 ))
+          version="0.${releases_number}.${{ env.commits }}"
           version=$(echo $version | xargs)
           echo "version=$version"
           echo "version=$version" >> $GITHUB_ENV
+
 
       - name: Create version.txt file
         run: echo "${{ env.version }}" > version.txt
