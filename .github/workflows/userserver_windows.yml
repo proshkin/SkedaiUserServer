@@ -70,6 +70,18 @@ jobs:
       - name: Build userServerMain.js to main.exe
         run: nexe userServerMain.js -o main.exe
 
+      - name: Test-run the executable
+        run: |
+          try {
+            Start-Process -FilePath .\main.exe -NoNewWindow -PassThru
+            Start-Sleep -Seconds 5
+            Stop-Process -Name main -Force
+          } catch {
+            Write-Error "Executable failed to run"
+            exit 1
+          }
+        shell: pwsh
+
       - name: Upload userServer_win as artifact
         uses: actions/upload-artifact@v4
         with:
