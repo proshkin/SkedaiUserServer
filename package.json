@@ -11,7 +11,6 @@
       "fs": "^0.0.1-security",
       "node": "^20.6.0",
       "node-cron": "^3.0.3",
-      "node-crypto": "^22.3.0",
       "node-notifier": "^10.0.1",
       "node-windows": "^1.0.0-beta.8",
       "os": "^0.1.2",
