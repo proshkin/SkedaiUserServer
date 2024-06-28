@@ -1,17 +1,58 @@
 name: Windows UserServer Build
 
 on:
-  repository_dispatch:
-    types: [trigger-userserver-build]
+  workflow_run:
+    workflows: ["Calculate Version and Trigger Build"]
+    types:
+      - completed
 
 jobs:
   build:
     runs-on: windows-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: setup Node.js environment for packages
+      - name: Download artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs')
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id
+            })
+            const matchArtifact = artifacts.data.artifacts.find(artifact => artifact.name === "version")
+            const download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: matchArtifact.id,
+              archive_format: 'zip'
+            })
+            fs.writeFileSync('version.zip', Buffer.from(download.data))
+      - run: tar -xf version.zip
+
+      - name: Read version
+        run: |
+          version=$(cat version.txt)
+          echo "version=$version" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Read Config File
+        id: read_config
+        run: |
+          while IFS=: read -r key value; do
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            echo "$key=$value" >> $GITHUB_ENV
+          done < config.txt
+        shell: bash
+
+      - name: Setup Node.js environment for packages
         uses: actions/setup-node@v4
         with:
           node-version: '20.11.0'
@@ -21,24 +62,19 @@ jobs:
           npm install -g nexe
           npm install
 
-      - name: setup Node.js environment for nexe
+      - name: Setup Node.js environment for nexe
         uses: actions/setup-node@v4
         with:
           node-version: '14.15.3'
 
-      - name: Download version artifact from previous workflow
-        uses: actions/download-artifact@v2
-        with:
-          name: version
-
-      - name: Read version
-        id: read_version
-        run: |
-          version=$(cat version.txt)
-          echo "version=$version" >> $GITHUB_ENV
-
       - name: Build userServerMain.js to main.exe
         run: nexe userServerMain.js -o main.exe
+
+      - name: Upload userServer_win as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: userServer_win_${{ env.version }}
+          path: main.exe
 
       - name: Check if release exists
         id: check_release
@@ -50,7 +86,7 @@ jobs:
           else
             echo "release_exists=true" >> $GITHUB_ENV
             echo "release_url=$release_url" >> $GITHUB_ENV
-          fi
+        shell: bash
 
       - name: Create or Get Release
         id: create_or_get_release
@@ -58,15 +94,23 @@ jobs:
         run: |
           if [ "${{ env.release_exists }}" == "true" ]; then
             echo "Using existing release."
-            echo "upload_url=$(curl -s -H 'Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}' ${{ env.release_url }} | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
+            upload_url=$(curl -s -H 'Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}' ${{ env.release_url }} | jq -r '.upload_url')
+            echo "upload_url=$upload_url" >> $GITHUB_ENV
           else
             echo "Creating new release."
             response=$(curl -s -X POST -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\": \"${{ env.version }}\", \"name\": \"Release ${{ env.version }}\", \"body\": \"Automated release\", \"draft\": false, \"prerelease\": ${{ env.is_prerelease == 'true' }}}" \
               "https://api.github.com/repos/${{ github.repository }}/releases")
-            echo "upload_url=$(echo $response | jq -r '.upload_url' | sed -e 's/{?name,label}//')" >> $GITHUB_ENV
-          fi
+            upload_url=$(echo $response | jq -r '.upload_url')
+            echo "upload_url=$upload_url" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Debugging Information
+        run: |
+          echo "Upload URL: ${{ env.upload_url }}"
+          echo "Asset Path: main.exe"
+          echo "Asset Name: userServer_win_${{ env.version }}"
 
       - name: Upload Release Asset
         if: env.is_release == 'true'
@@ -76,5 +120,5 @@ jobs:
         with:
           upload_url: ${{ env.upload_url }}
           asset_path: main.exe
-          asset_name: userServer_win_${{ env.version }}
+          asset_name: "userServer_win_${{ env.version }}"
           asset_content_type: application/octet-stream
