@@ -73,7 +73,7 @@ jobs:
       - name: Upload userServer_win as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: userServer_win_${{ env.version }}
+          name: userServer_win_${{ env.version }}.exe
           path: main.exe
 
       - name: Check if release exists
@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "Upload URL: ${{ env.upload_url }}"
           echo "Asset Path: main.exe"
-          echo "Asset Name: userServer_win_${{ env.version }}"
+          echo "Asset Name: userServer_win_${{ env.version }}.exe"
 
       - name: Upload Release Asset
         if: env.is_release == 'true'
@@ -118,5 +118,5 @@ jobs:
         with:
           upload_url: ${{ env.upload_url }}
           asset_path: main.exe
-          asset_name: "userServer_win_${{ env.version }}"
+          asset_name: "userServer_win_${{ env.version }}.exe"
           asset_content_type: application/octet-stream
