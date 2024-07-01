@@ -40,6 +40,7 @@ jobs:
         run: |
           version=$(cat version.txt)
           echo "version=$version" >> $GITHUB_ENV
+        shell: bash
 
       - name: Read Config File
         id: read_config
@@ -56,27 +57,27 @@ jobs:
         with:
           node-version: '20.11.0'
       
-      - name: Install dependencies
-        run: npm install
-
       - name: Install pkg
         run: npm install -g pkg
+
+      - name: Get number of releases
+        id: get_releases
+        run: |
+          releases=$(curl -s -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" | jq -r '. | length')
+          releases=$(echo $releases | xargs)
+          echo "releases=$releases" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Build executable
         run: pkg main.js --targets latest-macos-x64 --output userServer_mac
 
-      - name: Make executable runnable
-        run: chmod +x userServer_mac
-
       - name: Test-run the executable
         run: |
-          if ./userServer_mac & then
-            echo "Executable ran successfully"
-            kill $!
-          else
-            echo "Executable failed to run"
-            exit 1
-          fi
+          chmod +x ./userServer_mac
+          ./userServer_mac | tee output.log || exit 1
+        shell: bash
 
       - name: Upload userServer_mac as artifact
         uses: actions/upload-artifact@v4
