@@ -24,14 +24,22 @@
             "node_modules/@supabase/**/*",
             "node_modules/uuid/**/*",
             "node_modules/node-cron/**/*",
-            "node_modules/chokidar/**/*"
+            "node_modules/chokidar/**/*",
+            "node_modules/fs/**/*",
+            "node_modules/path/**/*",
+            "node_modules/os/**/*",
+            "node_modules/node-notifier/**/*"
         ],
         "scripts": [
             "node_modules/axios/dist/node/axios.cjs",
             "node_modules/@supabase/supabase-js/dist/supabase.cjs",
             "node_modules/uuid/dist/index.cjs",
             "node_modules/node-cron/index.js",
-            "node_modules/chokidar/index.js"
+            "node_modules/chokidar/index.js",
+            "node_modules/fs/index.js",
+            "node_modules/path/index.js",
+            "node_modules/os/index.js",
+            "node_modules/node-notifier/index.js"
         ]
     }
 }
