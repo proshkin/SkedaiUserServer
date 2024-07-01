@@ -69,6 +69,16 @@ jobs:
       - name: Build executable
         run: pkg main.js --targets latest-macos-x64 --output userServer_mac
 
+      - name: Test-run the executable
+        run: |
+          if ./userServer_mac & then
+            echo "Executable ran successfully"
+            kill $!
+          else
+            echo "Executable failed to run"
+            exit 1
+          fi
+
       - name: Upload userServer_mac as artifact
         uses: actions/upload-artifact@v4
         with:
