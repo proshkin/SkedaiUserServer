@@ -69,6 +69,9 @@ jobs:
       - name: Build executable
         run: pkg main.js --targets latest-macos-x64 --output userServer_mac
 
+      - name: Make executable runnable
+        run: chmod +x userServer_mac
+
       - name: Test-run the executable
         run: |
           if ./userServer_mac & then
