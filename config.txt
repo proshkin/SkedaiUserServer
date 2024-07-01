@@ -1,2 +1,2 @@
-is_release: true
+is_release: false
 is_prerelease: false
