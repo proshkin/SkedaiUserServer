@@ -40,7 +40,7 @@ jobs:
         run: |
           version=$(cat version.txt)
           echo "version=$version" >> $GITHUB_ENV
-      
+
       - name: Read Config File
         id: read_config
         run: |
@@ -56,15 +56,11 @@ jobs:
         with:
           node-version: '20.11.0'
       
+      - name: Install dependencies
+        run: npm install
+
       - name: Install pkg
         run: npm install -g pkg
-
-      - name: Get number of releases
-        id: get_releases
-        run: |
-          releases=$(curl -s -H "Authorization: token ${{ secrets.SKEDAI_ACTION_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100" | jq -r '. | length')
-          releases=$(echo $releases | xargs)
-          echo "releases=$releases" >> $GITHUB_ENV
 
       - name: Build executable
         run: pkg main.js --targets latest-macos-x64 --output userServer_mac
