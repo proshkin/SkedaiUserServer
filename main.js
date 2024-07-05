@@ -21,8 +21,8 @@ console.log('fs loaded');
 const path = require("path");
 console.log('path loaded');
 
-const axios = require("axios");
-console.log('axios loaded');
+// const axios = require("axios");
+// console.log('axios loaded');
 
 const cron = require('node-cron');
 console.log('node-cron loaded');
@@ -46,11 +46,11 @@ let userID = "38a93bd6-ec88-4b66-a17c-c43f4fc8bcc5";
 
 async function handleUpdate(installerUrl, installerPath) {
     const writer = fs.createWriteStream(installerPath);
-    const downloadResponse = await axios({
+    /* const downloadResponse = await axios({
         url: installerUrl,
         method: 'GET',
         responseType: 'stream'
-    });
+    }); */
 
     downloadResponse.data.pipe(writer);
 
@@ -104,7 +104,7 @@ async function checkIfUpdate() {
 
 async function getUpdate(versionNumber) {
     try {
-        const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/tags/' + versionNumber);
+        // const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/tags/' + versionNumber);
         const installerUrl = response.data.assets[0].browser_download_url; // Assuming the installer is the first asset
 
         const versionFilePath = path.join(nodeFolderPath, 'version.txt');
@@ -119,7 +119,7 @@ async function getUpdate(versionNumber) {
 
 async function checkForUpdates() {
     try {
-        const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
+        // const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
         // const response = await httpsGet('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
         const latestVersion = response.data.tag_name;
         const installerUrl = response.data.assets[0].browser_download_url; // Assuming the installer is the first asset
