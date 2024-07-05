@@ -1,16 +1,39 @@
-const DEBUG = true;
+console.log('Requiring modules...');
 
 const chokidar = require('chokidar');
+console.log('chokidar loaded');
+
 const os = require('os');
+console.log('os loaded');
+
 const {spawn, exec} = require('child_process');
+console.log('child_process loaded');
+
 const {createClient} = require('@supabase/supabase-js');
+console.log('supabase-js loaded');
+
 const {v4: uuidv4} = require('uuid');
+console.log('uuid loaded');
+
 const fs = require("fs");
+console.log('fs loaded');
+
 const path = require("path");
+console.log('path loaded');
+
 const axios = require("axios");
+console.log('axios loaded');
+
 const cron = require('node-cron');
+console.log('node-cron loaded');
+
 const https = require('https');
+console.log('https loaded');
+
 const {randomUUID} = require("crypto");
+console.log('crypto loaded');
+
+console.log('All modules loaded successfully.');
 
 const supabase = createClient('https://jfcurpgmlzlceotuthat.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmY3VycGdtbHpsY2VvdHV0aGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDUwODQ4ODksImV4cCI6MjAyMDY2MDg4OX0.7rAa3V9obXlEhewdRah4unY0apsEPHWEYXk5OwKYkLI');
 
