@@ -4,7 +4,7 @@
     "main": "main.js",
     "dependencies": {
         "@supabase/supabase-js": "^1.0.0",
-        "axios": "^1.6.2",
+        "node-fetch": "^2.6.7",
         "child_process": "^1.0.2",
         "chokidar": "^3.5.3",
         "electron-builder": "^24.6.4",
@@ -20,7 +20,6 @@
     },
     "pkg": {
         "assets": [
-            "node_modules/axios/**/*",
             "node_modules/@supabase/**/*",
             "node_modules/uuid/**/*",
             "node_modules/node-cron/**/*",
@@ -28,10 +27,10 @@
             "node_modules/fs/**/*",
             "node_modules/path/**/*",
             "node_modules/os/**/*",
-            "node_modules/node-notifier/**/*"
+            "node_modules/node-notifier/**/*",
+            "node_modules/node-fetch/**/*"
         ],
         "scripts": [
-            "node_modules/axios/dist/node/axios.cjs",
             "node_modules/@supabase/supabase-js/dist/supabase.cjs",
             "node_modules/uuid/dist/index.cjs",
             "node_modules/node-cron/index.js",
@@ -39,7 +38,8 @@
             "node_modules/fs/index.js",
             "node_modules/path/index.js",
             "node_modules/os/index.js",
-            "node_modules/node-notifier/index.js"
+            "node_modules/node-notifier/index.js",
+            "node_modules/node-fetch/lib/index.js"
         ]
     }
 }
