@@ -1,39 +1,41 @@
-console.log('Requiring modules...');
+const DEBUG = true;
+
+if (DEBUG) console.log('Requiring modules...');
 
 const chokidar = require('chokidar');
-console.log('chokidar loaded');
+if (DEBUG) console.log('chokidar loaded');
 
 const os = require('os');
-console.log('os loaded');
+if (DEBUG) console.log('os loaded');
 
 const {spawn, exec} = require('child_process');
-console.log('child_process loaded');
+if (DEBUG) console.log('child_process loaded');
 
 const {createClient} = require('@supabase/supabase-js');
-console.log('supabase-js loaded');
+if (DEBUG) console.log('supabase-js loaded');
 
 const {v4: uuidv4} = require('uuid');
-console.log('uuid loaded');
+if (DEBUG) console.log('uuid loaded');
 
 const fs = require("fs");
-console.log('fs loaded');
+if (DEBUG) console.log('fs loaded');
 
 const path = require("path");
-console.log('path loaded');
+if (DEBUG) console.log('path loaded');
 
 const fetch = require('node-fetch');
-console.log('node-fetch loaded');
+if (DEBUG) console.log('node-fetch loaded');
 
 const cron = require('node-cron');
-console.log('node-cron loaded');
+if (DEBUG) console.log('node-cron loaded');
 
 const https = require('https');
-console.log('https loaded');
+if (DEBUG) console.log('https loaded');
 
 const {randomUUID} = require("crypto");
-console.log('crypto loaded');
+if (DEBUG) console.log('crypto loaded');
 
-console.log('All modules loaded successfully.');
+if (DEBUG) console.log('All modules loaded successfully.');
 
 const supabase = createClient('https://jfcurpgmlzlceotuthat.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmY3VycGdtbHpsY2VvdHV0aGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDUwODQ4ODksImV4cCI6MjAyMDY2MDg4OX0.7rAa3V9obXlEhewdRah4unY0apsEPHWEYXk5OwKYkLI');
 
