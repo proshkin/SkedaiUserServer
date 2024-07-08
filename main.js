@@ -21,8 +21,8 @@ console.log('fs loaded');
 const path = require("path");
 console.log('path loaded');
 
-// const axios = require("axios");
-// console.log('axios loaded');
+const fetch = require('node-fetch');
+console.log('node-fetch loaded');
 
 const cron = require('node-cron');
 console.log('node-cron loaded');
@@ -46,13 +46,9 @@ let userID = "38a93bd6-ec88-4b66-a17c-c43f4fc8bcc5";
 
 async function handleUpdate(installerUrl, installerPath) {
     const writer = fs.createWriteStream(installerPath);
-    /* const downloadResponse = await axios({
-        url: installerUrl,
-        method: 'GET',
-        responseType: 'stream'
-    }); */
-
-    downloadResponse.data.pipe(writer);
+    const response = await fetch(installerUrl);
+    if (!response.ok) throw new Error(`Failed to fetch ${installerUrl}: ${response.statusText}`);
+    response.body.pipe(writer);
 
     await new Promise((resolve, reject) => {
         writer.on('finish', () => {
@@ -104,14 +100,16 @@ async function checkIfUpdate() {
 
 async function getUpdate(versionNumber) {
     try {
-        // const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/tags/' + versionNumber);
-        const installerUrl = response.data.assets[0].browser_download_url; // Assuming the installer is the first asset
+        const response = await fetch('https://api.github.com/repos/proshkin/SkedAIServer/releases/tags/' + versionNumber);
+        if (!response.ok) throw new Error(`Failed to fetch release info: ${response.statusText}`);
+        const releaseData = await response.json();
+        const installerUrl = releaseData.assets[0].browser_download_url; // Assuming the installer is the first asset
 
         const versionFilePath = path.join(nodeFolderPath, 'version.txt');
         const filename = path.basename(new URL(installerUrl).pathname);
         const downloadPath = path.join(nodeFolderPath, filename);
         console.log("Update found!");
-        handleUpdate(installerUrl, downloadPath)
+        await handleUpdate(installerUrl, downloadPath);
     } catch (error) {
         console.error('Error updating:', error);
     }
@@ -119,10 +117,11 @@ async function getUpdate(versionNumber) {
 
 async function checkForUpdates() {
     try {
-        // const response = await axios.get('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
-        // const response = await httpsGet('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
-        const latestVersion = response.data.tag_name;
-        const installerUrl = response.data.assets[0].browser_download_url; // Assuming the installer is the first asset
+        const response = await fetch('https://api.github.com/repos/proshkin/SkedAIServer/releases/latest');
+        if (!response.ok) throw new Error(`Failed to fetch latest release info: ${response.statusText}`);
+        const releaseData = await response.json();
+        const latestVersion = releaseData.tag_name;
+        const installerUrl = releaseData.assets[0].browser_download_url; // Assuming the installer is the first asset
 
         const versionFilePath = path.join(nodeFolderPath, 'version.txt');
         const currentVersion = fs.readFileSync(versionFilePath, 'utf8');
@@ -133,9 +132,7 @@ async function checkForUpdates() {
             const filename = path.basename(new URL(installerUrl).pathname);
             const downloadPath = path.join(nodeFolderPath, filename);
 
-
-            handleUpdate(installerUrl, downloadPath);
-
+            await handleUpdate(installerUrl, downloadPath);
         } else {
             console.log('No updates found');
         }
@@ -143,8 +140,6 @@ async function checkForUpdates() {
         console.error('Error checking for updates:', error);
     }
 }
-
-
 
 // Define the path of the file to watch
 const tokenFilePath = path.join(appDataPath, 'Node Server', 'token.txt');
@@ -166,7 +161,6 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
     // console.log(event, session);
 })
-
 
 // checkForUpdates();
 cron.schedule('0 21 * * *', () => {
@@ -278,6 +272,7 @@ async function writeRefreshedTokens(accessToken, refreshToken) {
         console.error(error);
     }
 }
+
 
 
 const localServerState = {
