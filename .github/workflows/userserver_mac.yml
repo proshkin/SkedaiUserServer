@@ -69,7 +69,9 @@ jobs:
       - name: Test-run the executable
         run: |
           chmod +x ./userServer_mac
-          timeout 5s ./userServer_mac | tee output.log || exit 1
+          ./userServer_mac &
+          sleep 5
+          pkill -f ./userServer_mac
         shell: bash
 
       - name: Upload userServer_mac as artifact
