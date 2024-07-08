@@ -6,7 +6,6 @@ on:
     types:
       - completed
 
-
 jobs:
   build:
     runs-on: macos-latest
@@ -70,7 +69,7 @@ jobs:
       - name: Test-run the executable
         run: |
           chmod +x ./userServer_mac
-          ./userServer_mac | tee output.log || exit 1
+          timeout 5s ./userServer_mac | tee output.log || exit 1
         shell: bash
 
       - name: Upload userServer_mac as artifact
