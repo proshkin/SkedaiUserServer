@@ -1,0 +1,14 @@
+name: TestB
+
+on:
+  repository_dispatch:
+    types: [trigger-testb]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
